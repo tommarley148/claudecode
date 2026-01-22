@@ -1,0 +1,324 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Core Entities
+// ============================================
+
+model Club {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String   @db.Text
+  logo        String?
+  coverImage  String?
+
+  // Contact & Location
+  email   String
+  phone   String?
+  website String?
+
+  // Social Media Links (stored as JSON)
+  socialLinks Json?
+
+  // Widget Configuration (stored as JSON array)
+  widgetConfig Json?
+
+  // Theme Configuration (stored as JSON)
+  theme Json?
+
+  // Status & Verification
+  status   ClubStatus @default(PENDING)
+  verified Boolean    @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  venues    Venue[]
+  offerings Offering[]
+  teams     Team[]
+  events    Event[]
+  reviews   Review[]
+  admins    ClubAdmin[]
+
+  @@index([slug])
+  @@index([status])
+  @@map("clubs")
+}
+
+enum ClubStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+model Venue {
+  id   String @id @default(cuid())
+  name String
+
+  // Address (stored as JSON for flexibility)
+  address Json
+
+  // Geolocation
+  latitude  Float
+  longitude Float
+
+  // Facilities
+  amenities    String[]
+  capacity     Int?
+  images       String[]
+  accessibility String[]
+
+  // Description
+  description String? @db.Text
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  clubId String
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  events Event[]
+
+  @@index([clubId])
+  @@index([latitude, longitude])
+  @@map("venues")
+}
+
+model Offering {
+  id          String  @id @default(cuid())
+  title       String
+  description String  @db.Text
+  type        OfferingType
+  ageGroups   String[]
+  skillLevel  SkillLevel
+
+  // Schedule (stored as JSON for flexibility)
+  schedule Json
+
+  // Pricing (stored as JSON)
+  pricing Json
+
+  // Registration
+  registrationRequired Boolean  @default(false)
+  maxParticipants      Int?
+  currentParticipants  Int      @default(0)
+  registrationUrl      String?
+
+  // Dates
+  startDate DateTime
+  endDate   DateTime?
+
+  // Status
+  status OfferingStatus @default(ACTIVE)
+
+  // Images
+  images String[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  clubId String
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([type])
+  @@index([status])
+  @@map("offerings")
+}
+
+enum OfferingType {
+  TRAINING
+  MATCH
+  SOCIAL
+  CAMP
+  COURSE
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ALL
+}
+
+enum OfferingStatus {
+  ACTIVE
+  FULL
+  CANCELLED
+  COMPLETED
+}
+
+model Team {
+  id         String  @id @default(cuid())
+  name       String
+  ageGroup   String
+  gender     Gender
+  skillLevel String
+  division   String?
+  captain    String?
+  coach      String?
+  image      String?
+
+  // Roster (stored as JSON array)
+  roster Json?
+
+  // Recent results (stored as JSON array)
+  recentResults Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  clubId String
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@map("teams")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  MIXED
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String    @db.Text
+  type        EventType
+
+  // Dates
+  startDate DateTime
+  endDate   DateTime
+
+  // Location
+  venueId String?
+  venue   Venue?  @relation(fields: [venueId], references: [id], onDelete: SetNull)
+
+  // Registration
+  registrationUrl   String?
+  capacity          Int?
+  registeredCount   Int      @default(0)
+  registrationDeadline DateTime?
+
+  // Visibility
+  featured Boolean @default(false)
+
+  // Status
+  status EventStatus @default(SCHEDULED)
+
+  // Images
+  images String[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  clubId String
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([status])
+  @@index([startDate])
+  @@map("events")
+}
+
+enum EventType {
+  MATCH
+  TRAINING
+  SOCIAL
+  MEETING
+  TOURNAMENT
+  FUNDRAISER
+}
+
+enum EventStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model Review {
+  id         String  @id @default(cuid())
+  authorName String
+  rating     Int // 1-5
+  title      String
+  content    String  @db.Text
+  verified   Boolean @default(false)
+
+  // Optional response from club
+  response Json?
+
+  // Engagement
+  helpful Int @default(0)
+
+  // Moderation
+  status ReviewStatus @default(PENDING)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  clubId String
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([status])
+  @@index([rating])
+  @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ============================================
+// Admin & Users (for future implementation)
+// ============================================
+
+model ClubAdmin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      AdminRole @default(CLUB_ADMIN)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  clubId String
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([email])
+  @@map("club_admins")
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  CLUB_ADMIN
+  MODERATOR
+}
