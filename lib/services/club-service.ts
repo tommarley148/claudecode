@@ -1,8 +1,12 @@
 // Mock service for demonstration - returns dummy data
 // In production, this would query the database via Prisma
 
+import { faker } from '@faker-js/faker'
 import { generateCompleteClub } from '@/lib/dummy-data'
 import type { ClubSearchParams, SearchResult } from '@/types'
+
+// Seed faker for consistent data generation across hot reloads
+faker.seed(123456)
 
 // Generate mock clubs on module load with consistent IDs
 const mockClubs = Array.from({ length: 30 }, (_, i) => {
@@ -19,7 +23,8 @@ const mockClubs = Array.from({ length: 30 }, (_, i) => {
 })
 
 // Log all slugs for debugging
-console.log('Available club slugs:', mockClubs.map(c => c.slug).slice(0, 5))
+console.log('🏏 Generated', mockClubs.length, 'mock clubs')
+console.log('🏏 First 5 clubs:', mockClubs.slice(0, 5).map(c => ({ name: c.name, slug: c.slug })))
 
 export async function searchClubs(
   params: ClubSearchParams,
