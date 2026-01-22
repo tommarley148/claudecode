@@ -22,6 +22,9 @@ import type {
 import { generateSlug } from './utils'
 import { appConfig } from '@/config/site'
 
+// Seed faker for consistent data generation
+faker.seed(123456)
+
 // UK Cricket Club Names
 const clubPrefixes = ['', 'Old', 'New', 'Royal', 'St.']
 const clubSuffixes = ['Cricket Club', 'CC', 'Cricket & Sports Club']
