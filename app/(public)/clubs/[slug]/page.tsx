@@ -3,14 +3,13 @@ import { getClubBySlug } from '@/lib/services/club-service'
 import Link from 'next/link'
 
 interface ClubPageProps {
-  params: Promise<{
+  params: {
     slug: string
-  }>
+  }
 }
 
 export default async function ClubPage({ params }: ClubPageProps) {
-  const { slug } = await params
-  const club = await getClubBySlug(slug)
+  const club = await getClubBySlug(params.slug)
 
   if (!club) {
     notFound()

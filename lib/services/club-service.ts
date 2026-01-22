@@ -4,19 +4,22 @@
 import { generateCompleteClub } from '@/lib/dummy-data'
 import type { ClubSearchParams, SearchResult } from '@/types'
 
-// Generate mock clubs on module load
-const mockClubs = Array.from({ length: 30 }, () => {
+// Generate mock clubs on module load with consistent IDs
+const mockClubs = Array.from({ length: 30 }, (_, i) => {
   const clubData = generateCompleteClub()
   return {
     ...clubData.club,
-    id: Math.random().toString(36).substr(2, 9),
-    venues: clubData.venues.map(v => ({ ...v, id: Math.random().toString(36).substr(2, 9) })),
-    offerings: clubData.offerings.map(o => ({ ...o, id: Math.random().toString(36).substr(2, 9) })),
-    teams: clubData.teams.map(t => ({ ...t, id: Math.random().toString(36).substr(2, 9) })),
-    events: clubData.events.map(e => ({ ...e, id: Math.random().toString(36).substr(2, 9) })),
-    reviews: clubData.reviews.map(r => ({ ...r, id: Math.random().toString(36).substr(2, 9) })),
+    id: `club-${i}`,
+    venues: clubData.venues.map((v, vi) => ({ ...v, id: `venue-${i}-${vi}`, clubId: `club-${i}` })),
+    offerings: clubData.offerings.map((o, oi) => ({ ...o, id: `offering-${i}-${oi}`, clubId: `club-${i}` })),
+    teams: clubData.teams.map((t, ti) => ({ ...t, id: `team-${i}-${ti}`, clubId: `club-${i}` })),
+    events: clubData.events.map((e, ei) => ({ ...e, id: `event-${i}-${ei}`, clubId: `club-${i}` })),
+    reviews: clubData.reviews.map((r, ri) => ({ ...r, id: `review-${i}-${ri}`, clubId: `club-${i}` })),
   }
 })
+
+// Log all slugs for debugging
+console.log('Available club slugs:', mockClubs.map(c => c.slug).slice(0, 5))
 
 export async function searchClubs(
   params: ClubSearchParams,
@@ -56,10 +59,16 @@ export async function searchClubs(
 }
 
 export async function getClubBySlug(slug: string) {
+  console.log('Looking for club with slug:', slug)
+  console.log('Available clubs:', mockClubs.length)
+
   // Simulate database delay
   await new Promise(resolve => setTimeout(resolve, 200))
 
-  return mockClubs.find(club => club.slug === slug) || null
+  const club = mockClubs.find(club => club.slug === slug)
+  console.log('Found club:', club ? club.name : 'NOT FOUND')
+
+  return club || null
 }
 
 export async function getFeaturedClubs(limit: number = 6) {
