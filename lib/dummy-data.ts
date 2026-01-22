@@ -8,7 +8,7 @@ import {
   EventType,
   EventStatus,
   ReviewStatus
-} from '@prisma/client'
+} from '@/types/enums'
 import type {
   Address,
   SocialLinks,

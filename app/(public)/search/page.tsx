@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { searchClubs } from '@/lib/services/club-service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,9 +18,16 @@ export default function SearchPage() {
     const performSearch = async () => {
       setLoading(true)
       try {
-        const response = await searchClubs(searchParams)
-        setResults(response.data)
-        setTotal(response.total)
+        // Build query string
+        const queryParams = new URLSearchParams()
+        if (searchParams.query) queryParams.set('query', searchParams.query)
+        if (searchParams.verified !== undefined) queryParams.set('verified', String(searchParams.verified))
+
+        const response = await fetch(`/api/search?${queryParams.toString()}`)
+        const data = await response.json()
+
+        setResults(data.data)
+        setTotal(data.total)
       } catch (error) {
         console.error('Search error:', error)
       } finally {
